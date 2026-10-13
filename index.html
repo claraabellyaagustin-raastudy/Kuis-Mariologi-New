@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kuis Mariologi Dasar</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'catholic-blue': '#1e3a8a', // Deep blue
+                        'catholic-gold': '#d4af37', // Soft gold
+                        'catholic-light': '#fdfbf7', // Cream/off-white
+                        'catholic-accent': '#60a5fa', // Light blue
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        * {
+            font-family: "Times New Roman", Times, serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            line-height: 1.5;
+            background-color: #fdfbf7; /* catholic-light */
+            color: #1f2937;
+            overflow-x: hidden;
+        }
+
+        button, input, textarea, select {
+            font-family: "Times New Roman", Times, serif;
+        }
+
+        /* Custom Scrollbar for better aesthetics */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+        
+        .fade-out {
+            animation: fadeOut 0.3s ease-in-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
+
+        .option-btn {
+            transition: all 0.2s ease-in-out;
+        }
+        
+        .option-btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .option-selected {
+            background-color: #dbeafe !important; /* blue-100 */
+            border-color: #3b82f6 !important; /* blue-500 */
+            color: #1e3a8a !important; /* catholic-blue */
+        }
+
+        /* Glassmorphism effect for cards */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Responsive specific adjustments */
+        @media (max-width: 640px) {
+            .glass-card {
+                border-radius: 0;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+                padding: 1.5rem;
+            }
+            .app-container {
+                padding: 0;
+            }
+            .content-wrapper {
+                flex-grow: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+            }
+        }
+        
+        @media (min-width: 641px) {
+            .app-container {
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 2rem 1rem;
+            }
+            .glass-card {
+                border-radius: 1rem;
+                max-width: 48rem; /* md:max-w-3xl */
+                width: 100%;
+                padding: 3rem;
+            }
+        }
+
+        /* Confetti Canvas */
+        #confetti-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-catholic-light text-gray-800">
+
+    <!-- Audio Toggle Button -->
+    <button id="audioToggleBtn" class="fixed top-4 right-4 z-50 bg-white/80 backdrop-blur p-2 rounded-full shadow-md text-catholic-blue hover:bg-gray-100 transition-colors" title="Toggle Sound">
+        <svg id="icon-sound-on" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5 10c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h2.586a1 1 0 00.707-.293l5.414-5.414a1 1 0 00.293-.707V8.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 008.586 7H5z" />
+        </svg>
+        <svg id="icon-sound-off" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h2.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+        </svg>
+    </button>
+
+    <!-- Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center fade-in backdrop-blur-sm">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl">
+            <h3 class="text-xl font-bold text-catholic-blue mb-2 text-center">Selesaikan Kuis?</h3>
+            <p class="text-gray-600 mb-6 text-center">Apakah kamu yakin ingin menyelesaikan kuis?</p>
+            <div class="flex flex-col sm:flex-row gap-3">
+                <button id="btnCancelSubmit" class="flex-1 py-2 px-4 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors">Kembali</button>
+                <button id="btnConfirmSubmit" class="flex-1 py-2 px-4 bg-catholic-blue text-white rounded-lg hover:bg-blue-900 transition-colors">Ya, Selesaikan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal (for empty answer) -->
+    <div id="alertModal" class="fixed inset-0 bg-black/30 z-50 hidden flex items-center justify-center fade-in">
+        <div class="bg-white rounded-xl p-6 max-w-xs w-full mx-4 shadow-xl text-center border-t-4 border-yellow-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-yellow-400 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p class="text-gray-700 mb-4">Silakan pilih salah satu jawaban terlebih dahulu.</p>
+            <button id="btnOkAlert" class="w-full py-2 bg-catholic-blue text-white rounded-lg hover:bg-blue-900 transition-colors">Mengerti</button>
+        </div>
+    </div>
+
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="app-container relative z-10">
+        <!-- VIEW 1: HOME PAGE -->
+        <main id="view-home" class="glass-card fade-in relative overflow-hidden">
+            <!-- Decorative background elements -->
+            <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-catholic-gold opacity-10 rounded-full blur-2xl"></div>
+            <div class="absolute bottom-0 left-0 -mb-10 -ml-10 w-40 h-40 bg-catholic-blue opacity-10 rounded-full blur-2xl"></div>
+            
+            <div class="content-wrapper text-center relative z-10">
+                <div class="mb-6 flex justify-center">
+                    <!-- Elegant Cross Icon -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 text-catholic-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m0-16c-1.657 0-3 1.343-3 3s1.343 3 3 3 3-1.343 3-3-1.343-3-3-3zm-6 8h12" />
+                    </svg>
+                </div>
+                
+                <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-catholic-blue mb-2 uppercase tracking-wide">Kuis Mariologi Dasar</h1>
+                <h2 class="text-lg sm:text-xl text-gray-700 mb-1 font-medium">Uji Pemahamanmu tentang Materi Mariologi</h2>
+                <p class="text-sm text-gray-500 mb-8 italic">kuis by clara abellya agustin</p>
+                
+                <p class="text-base sm:text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
+                    Jawablah setiap pertanyaan dengan teliti dan uji pemahamanmu mengenai dogma Bunda Maria, gelar Maria, doa Rosario, serta perannya dalam kehidupan iman dan ajaran Gereja Katolik.
+                </p>
+                
+                <div class="bg-gray-50 rounded-lg p-5 mb-8 max-w-md mx-auto text-left shadow-sm border border-gray-100">
+                    <h3 class="font-bold text-catholic-blue mb-3 text-center border-b pb-2">Informasi Kuis</h3>
+                    <ul class="text-sm text-gray-700 space-y-2">
+                        <li class="flex items-center"><span class="w-4 h-4 bg-catholic-blue rounded-full flex items-center justify-center text-white text-[10px] mr-3">✓</span> Jumlah soal: 10 Pilihan Ganda</li>
+                        <li class="flex items-center"><span class="w-4 h-4 bg-catholic-blue rounded-full flex items-center justify-center text-white text-[10px] mr-3">✓</span> Sistem penilaian: Otomatis (10 poin/soal)</li>
+                        <li class="flex items-center"><span class="w-4 h-4 bg-catholic-blue rounded-full flex items-center justify-center text-white text-[10px] mr-3">✓</span> Skor maksimal: 100 poin</li>
+                        <li class="flex items-center"><span class="w-4 h-4 bg-catholic-blue rounded-full flex items-center justify-center text-white text-[10px] mr-3">✓</span> Pembahasan tersedia setelah kuis selesai</li>
+                    </ul>
+                </div>
+                
+                <button id="btnStartQuiz" class="inline-block bg-catholic-blue hover:bg-blue-900 text-white font-bold py-3 px-10 rounded-full shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl text-lg">
+                    MULAI KUIS
+                </button>
+            </div>
+        </main>
+
+        <!-- VIEW 2: QUIZ PAGE -->
+        <main id="view-quiz" class="glass-card hidden">
+            <div class="content-wrapper w-full">
+                <!-- Progress Header -->
+                <div class="mb-8">
+                    <div class="flex justify-between items-end mb-2">
+                        <span id="questionCounter" class="text-sm font-bold text-catholic-blue uppercase tracking-wider">Soal 1 dari 10</span>
+                        <span id="progressPercentage" class="text-xs font-semibold text-gray-500">10%</span>
+                    </div>
+                    <div class="w-full bg-gray-200 rounded-full h-2.5 shadow-inner">
+                        <div id="progressBar" class="bg-catholic-blue h-2.5 rounded-full transition-all duration-500 ease-out" style="width: 10%"></div>
+                    </div>
+                </div>
+
+                <!-- Question Area -->
+                <div class="mb-8 min-h-[80px]">
+                    <h2 id="questionText" class="text-xl sm:text-2xl font-bold text-gray-800 leading-snug">
+                        <!-- Question injected here -->
+                    </h2>
+                </div>
+
+                <!-- Options Area -->
+                <div id="optionsContainer" class="space-y-3 sm:space-y-4 mb-8 grid grid-cols-1 md:grid-cols-2 md:gap-4 md:space-y-0">
+                    <!-- Options injected here -->
+                </div>
+
+                <!-- Action Footer -->
+                <div class="flex justify-end mt-auto pt-4 border-t border-gray-100">
+                    <button id="btnNext" class="bg-catholic-blue hover:bg-blue-900 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors flex items-center">
+                        <span>Lanjut</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </main>
+
+        <!-- VIEW 3: RESULT PAGE -->
+        <main id="view-result" class="glass-card hidden relative overflow-hidden">
+             <!-- Decorative background elements -->
+             <div class="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-20 w-60 h-60 bg-catholic-gold opacity-10 rounded-full blur-3xl"></div>
+
+            <div class="content-wrapper text-center relative z-10 flex flex-col items-center">
+                <h1 class="text-2xl sm:text-3xl font-bold text-catholic-blue mb-2 uppercase">KUIS SELESAI!</h1>
+                <p class="text-gray-500 mb-8">Berikut adalah ringkasan hasil pengerjaanmu.</p>
+                
+                <!-- Score Display -->
+                <div class="relative mb-6">
+                    <svg class="w-40 h-40 transform -rotate-90">
+                        <circle cx="80" cy="80" r="70" stroke="#e5e7eb" stroke-width="8" fill="transparent" />
+                        <circle id="scoreCircle" cx="80" cy="80" r="70" stroke="#1e3a8a" stroke-width="8" fill="transparent" stroke-dasharray="439.8" stroke-dashoffset="439.8" class="transition-all duration-1000 ease-out" stroke-linecap="round" />
+                    </svg>
+                    <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center">
+                        <span id="finalScoreText" class="text-4xl font-bold text-catholic-blue block leading-none">0</span>
+                        <span class="text-sm text-gray-500 border-t border-gray-300 pt-1 mt-1 block">dari 100</span>
+                    </div>
+                </div>
+                
+                <!-- Score Message -->
+                <div id="scoreMessage" class="text-lg font-bold mb-8 px-4 py-3 rounded-lg bg-gray-50 border border-gray-200 text-gray-800 w-full max-w-md">
+                    <!-- Message injected here -->
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 gap-4 w-full max-w-md mb-10">
+                    <div class="bg-green-50 border border-green-100 rounded-lg p-4 flex flex-col items-center">
+                        <span class="text-green-600 font-bold text-2xl" id="correctCountText">0</span>
+                        <span class="text-sm text-gray-600">Jawaban Benar</span>
+                    </div>
+                    <div class="bg-red-50 border border-red-100 rounded-lg p-4 flex flex-col items-center">
+                        <span class="text-red-500 font-bold text-2xl" id="wrongCountText">0</span>
+                        <span class="text-sm text-gray-600">Jawaban Salah</span>
+                    </div>
+                    <div class="col-span-2 bg-blue-50 border border-blue-100 rounded-lg p-4 flex flex-col items-center">
+                        <span class="text-catholic-blue font-bold text-2xl" id="percentageText">0%</span>
+                        <span class="text-sm text-gray-600">Persentase Keberhasilan</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 w-full max-w-md">
+                    <button id="btnViewReview" class="flex-1 bg-white border-2 border-catholic-blue text-catholic-blue font-bold py-3 px-4 rounded-lg hover:bg-blue-50 transition-colors">
+                        LIHAT PEMBAHASAN
+                    </button>
+                    <button id="btnRetryQuiz" class="flex-1 bg-catholic-blue text-white font-bold py-3 px-4 rounded-lg hover:bg-blue-900 transition-colors shadow-md">
+                        ULANGI KUIS
+                    </button>
+                </div>
+                <button id="btnHomeFromResult" class="mt-4 text-sm text-gray-500 hover:text-catholic-blue underline transition-colors">
+                    Kembali ke Beranda
+                </button>
+            </div>
+        </main>
+
+        <!-- VIEW 4: REVIEW PAGE -->
+        <main id="view-review" class="glass-card hidden">
+            <div class="w-full">
+                <!-- Header Sticky -->
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-gray-200 sticky top-0 bg-white/90 backdrop-blur z-20 pt-2">
+                    <h2 class="text-2xl font-bold text-catholic-blue uppercase">Pembahasan</h2>
+                    <button id="btnCloseReview" class="p-2 text-gray-500 hover:text-catholic-blue hover:bg-gray-100 rounded-full transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Review Content Area -->
+                <div id="reviewContainer" class="space-y-8 pb-8">
+                    <!-- Review items injected here -->
+                </div>
+
+                <!-- Footer Actions -->
+                <div class="mt-8 flex flex-col sm:flex-row justify-center gap-4 pt-6 border-t border-gray-200">
+                    <button id="btnRetryFromReview" class="bg-catholic-blue hover:bg-blue-900 text-white font-bold py-3 px-8 rounded-lg shadow-md transition-colors">
+                        ULANGI KUIS
+                    </button>
+                    <button id="btnHomeFromReview" class="bg-white border-2 border-gray-300 text-gray-700 font-bold py-3 px-8 rounded-lg hover:bg-gray-50 transition-colors">
+                        KEMBALI KE BERANDA
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- 1. DATA SOAL MARIOLOGI DASAR ---
+        const questions = [
+            {
+                id: 1,
+                question: "Menurut dogma \"Keperawanan Selamanya\", kapankah Bunda Maria diyakini tetap menjadi seorang perawan?",
+                options: {
+                    A: "Hanya sebelum melahirkan Yesus",
+                    B: "Hanya setelah melahirkan Yesus",
+                    C: "Sebelum, selama, dan sesudah melahirkan",
+                    D: "Sejak ia diangkat ke surga"
+                },
+                answer: "C",
+                explanation: "Dalam ajaran Katolik, dogma Keperawanan Selamanya menyatakan bahwa Maria tetap perawan sebelum, selama, dan sesudah kelahiran Yesus."
+            },
+            {
+                id: 2,
+                question: "Gelar \"Theotokos\" yang disematkan kepada Bunda Maria memiliki arti...",
+                options: {
+                    A: "Ratu Surga",
+                    B: "Bunda Allah",
+                    C: "Hamba Tuhan",
+                    D: "Perawan Suci"
+                },
+                answer: "B",
+                explanation: "Theotokos berarti Bunda Allah. Gelar ini menegaskan identitas Yesus Kristus sebagai Allah yang menjadi manusia dan Maria sebagai ibu-Nya."
+            },
+            {
+                id: 3,
+                question: "Dogma \"Pembuahan Suci\" (Dikandung Tanpa Noda) menyatakan bahwa Bunda Maria...",
+                options: {
+                    A: "Diangkat ke surga beserta tubuh dan jiwanya",
+                    B: "Tidak pernah melakukan kesalahan selama hidupnya",
+                    C: "Dijaga kesuciannya dari dosa asal pada saat dirinya diciptakan",
+                    D: "Melahirkan Yesus tanpa campur tangan manusia"
+                },
+                answer: "C",
+                explanation: "Dogma Dikandung Tanpa Noda mengajarkan bahwa Maria sejak awal keberadaannya dijaga dari dosa asal oleh rahmat Allah."
+            },
+            {
+                id: 4,
+                question: "Dalam ajaran Gereja Katolik, Bunda Maria tidak sekadar disebut sebagai orang kudus (sancta), melainkan diberikan gelar khusus yaitu...",
+                options: {
+                    A: "Theotokos",
+                    B: "Sanctissima (Orang yang teramat kudus)",
+                    C: "Beata (Yang terberkati)",
+                    D: "Gratia (Penuh rahmat)"
+                },
+                answer: "B",
+                explanation: "Sanctissima merupakan sebutan yang menekankan kekudusan Maria yang istimewa dalam tradisi penghormatan Gereja Katolik."
+            },
+            {
+                id: 5,
+                question: "Mengapa umat Katolik menghormati Bunda Maria melalui devosi, tetapi tidak menyembahnya?",
+                options: {
+                    A: "Karena Maria belum diangkat menjadi Tuhan",
+                    B: "Karena Maria adalah ciptaan Allah, sedangkan yang patut disembah hanyalah Allah",
+                    C: "Karena devosi kepada Maria sudah cukup mewakili penyembahan",
+                    D: "Karena Maria hanya manusia biasa yang tidak memiliki peran penting"
+                },
+                answer: "B",
+                explanation: "Umat Katolik menghormati Maria melalui devosi, tetapi penyembahan hanya ditujukan kepada Allah karena Maria tetap merupakan ciptaan Allah."
+            },
+            {
+                id: 6,
+                question: "Doa Rosario sering disebut sebagai \"ringkasan Injil\" karena...",
+                options: {
+                    A: "Didoakan setiap hari oleh umat Katolik",
+                    B: "Terdiri dari banyak doa Bapa Kami dan Salam Maria",
+                    C: "Berisi sejarah keselamatan dari inkarnasi hingga kebangkitan yang dipaparkan dalam Injil",
+                    D: "Merupakan doa terpanjang dalam tradisi Katolik"
+                },
+                answer: "C",
+                explanation: "Rosario disebut ringkasan Injil karena peristiwa-peristiwanya membantu umat merenungkan kehidupan Yesus dan sejarah keselamatan."
+            },
+            {
+                id: 7,
+                question: "Peristiwa \"Yesus dibaptis di Sungai Yordan\" termasuk ke dalam rangkaian peristiwa Rosario yang mana?",
+                options: {
+                    A: "Peristiwa Gembira",
+                    B: "Peristiwa Sedih",
+                    C: "Peristiwa Mulia",
+                    D: "Peristiwa Terang"
+                },
+                answer: "D",
+                explanation: "Pembaptisan Yesus di Sungai Yordan merupakan bagian dari Peristiwa Terang dalam doa Rosario."
+            },
+            {
+                id: 8,
+                question: "Gereja meneladani peran Maria dengan menjadi penolong bagi seluruh umatnya, di mana setiap usaha umat senantiasa ditolong dan tidak dimusnahkan. Hal ini berlandaskan pada prinsip...",
+                options: {
+                    A: "Solidaritas",
+                    B: "Subsidiaritas",
+                    C: "Optio praeferentialis pro pauperibus",
+                    D: "Actuosa participatio"
+                },
+                answer: "B",
+                explanation: "Subsidiaritas menekankan pemberian bantuan kepada individu atau kelompok agar mereka dapat menjalankan tanggung jawab dan mengembangkan kemampuannya."
+            },
+            {
+                id: 9,
+                question: "Keprihatinan utama Gereja dengan sikap yang tegas memihak kaum miskin dan lemah merupakan perwujudan dari prinsip...",
+                options: {
+                    A: "Subsidiaritas",
+                    B: "Solidaritas",
+                    C: "Sacramentum mundi",
+                    D: "Optio praeferentialis pro pauperibus"
+                },
+                answer: "D",
+                explanation: "Optio praeferentialis pro pauperibus berarti pilihan yang mengutamakan kaum miskin dan lemah dalam perhatian serta tindakan Gereja."
+            },
+            {
+                id: 10,
+                question: "Keperawanan Bunda Maria sangat erat kaitannya dengan imannya, yang ditunjukkan melalui sikap...",
+                options: {
+                    A: "Penyerahan diri sepenuhnya kepada penyelenggaraan ilahi",
+                    B: "Mengasingkan diri dari dunia luar",
+                    C: "Berfokus hanya pada kegiatan keagamaan di Bait Allah",
+                    D: "Menghindari segala bentuk penderitaan di dunia"
+                },
+                answer: "A",
+                explanation: "Sikap Maria menunjukkan iman dan penyerahan diri kepada kehendak serta penyelenggaraan ilahi."
+            }
+        ];
+
+        // --- STREAMING_CHUNK:State Management ---
+        const state = {
+            currentQuestionIndex: 0,
+            userAnswers: new Array(questions.length).fill(null),
+            score: 0,
+            isAudioEnabled: true
+        };
+
+        // DOM Elements mapping
+        const views = {
+            home: document.getElementById('view-home'),
+            quiz: document.getElementById('view-quiz'),
+            result: document.getElementById('view-result'),
+            review: document.getElementById('view-review')
+        };
+        const modals = {
+            confirm: document.getElementById('confirmModal'),
+            alert: document.getElementById('alertModal')
+        };
+        const elements = {
+            questionCounter: document.getElementById('questionCounter'),
+            progressPercentage: document.getElementById('progressPercentage'),
+            progressBar: document.getElementById('progressBar'),
+            questionText: document.getElementById('questionText'),
+            optionsContainer: document.getElementById('optionsContainer'),
+            btnNext: document.getElementById('btnNext')
+        };
+
+        // --- STREAMING_CHUNK:Audio Generation Engine (Web Audio API) ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playTone(freq, type, duration, vol, delay = 0) {
+            if (!state.isAudioEnabled) return;
+            try {
+                if(audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                oscillator.type = type;
+                oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime + delay);
+                
+                gainNode.gain.setValueAtTime(0, audioCtx.currentTime + delay);
+                gainNode.gain.linearRampToValueAtTime(vol, audioCtx.currentTime + delay + 0.05);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + delay + duration);
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start(audioCtx.currentTime + delay);
+                oscillator.stop(audioCtx.currentTime + delay + duration);
+            } catch (e) {
+                console.log("Audio play failed:", e);
+            }
+        }
+
+        function playCorrectSound() {
+            // Cheerful chord C-E-G (C major)
+            playTone(523.25, 'sine', 0.4, 0.3, 0);    // C5
+            playTone(659.25, 'sine', 0.4, 0.3, 0.1);  // E5
+            playTone(783.99, 'sine', 0.6, 0.3, 0.2);  // G5
+        }
+
+        function playWrongSound() {
+            // Gentle descending minor tone
+            playTone(440.00, 'triangle', 0.3, 0.2, 0);   // A4
+            playTone(415.30, 'triangle', 0.4, 0.2, 0.15); // G#4
+        }
+        
+        function playFinishSound() {
+            playTone(523.25, 'sine', 0.3, 0.3, 0);    
+            playTone(659.25, 'sine', 0.3, 0.3, 0.1);  
+            playTone(783.99, 'sine', 0.3, 0.3, 0.2);  
+            playTone(1046.50, 'sine', 0.8, 0.3, 0.3); // C6
+        }
+
+        // --- STREAMING_CHUNK:View Navigation Logic ---
+        function switchView(viewId) {
+            // Hide all views with fade out
+            Object.values(views).forEach(view => {
+                if (!view.classList.contains('hidden')) {
+                    view.classList.remove('fade-in');
+                    view.classList.add('fade-out');
+                    setTimeout(() => {
+                        view.classList.add('hidden');
+                        view.classList.remove('fade-out');
+                    }, 300);
+                }
+            });
+
+            // Show target view with fade in after short delay
+            setTimeout(() => {
+                views[viewId].classList.remove('hidden');
+                views[viewId].classList.add('fade-in');
+                window.scrollTo(0, 0);
+            }, 300);
+        }
+
+        // --- STREAMING_CHUNK:Quiz Core Logic ---
+        function startQuiz() {
+            // Audio context requires user interaction to resume
+            if(audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            state.currentQuestionIndex = 0;
+            state.userAnswers = new Array(questions.length).fill(null);
+            state.score = 0;
+            loadQuestion();
+            switchView('quiz');
+        }
+
+        function loadQuestion() {
+            const index = state.currentQuestionIndex;
+            const q = questions[index];
+            const total = questions.length;
+            
+            // Update Header
+            elements.questionCounter.textContent = `Soal ${index + 1} dari ${total}`;
+            const percentage = Math.round(((index + 1) / total) * 100);
+            elements.progressPercentage.textContent = `${percentage}%`;
+            elements.progressBar.style.width = `${percentage}%`;
+
+            // Update Content
+            elements.questionText.textContent = `${index + 1}. ${q.question}`;
+            
+            // Render Options
+            elements.optionsContainer.innerHTML = '';
+            for (const [key, value] of Object.entries(q.options)) {
+                const btn = document.createElement('button');
+                btn.className = 'option-btn w-full text-left p-4 rounded-xl border-2 border-gray-200 bg-white hover:border-catholic-blue hover:bg-blue-50 focus:outline-none flex items-start group';
+                btn.dataset.key = key;
+                
+                // Add letter badge
+                const badge = document.createElement('span');
+                badge.className = 'flex-shrink-0 w-8 h-8 rounded-full border border-gray-300 flex items-center justify-center font-bold mr-3 text-gray-500 group-hover:border-catholic-blue group-hover:text-catholic-blue transition-colors';
+                badge.textContent = key;
+                
+                const textSpan = document.createElement('span');
+                textSpan.className = 'text-gray-700 leading-tight mt-1';
+                textSpan.textContent = value;
+                
+                btn.appendChild(badge);
+                btn.appendChild(textSpan);
+
+                // Check if already selected (for going back/forth if implemented, currently one-way)
+                if (state.userAnswers[index] === key) {
+                    selectOptionUI(btn, badge);
+                }
+
+                btn.onclick = () => handleOptionSelect(btn, key);
+                elements.optionsContainer.appendChild(btn);
+            }
+
+            // Update Button Text
+            if (index === total - 1) {
+                elements.btnNext.innerHTML = '<span>Selesai</span><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg>';
+                elements.btnNext.classList.remove('bg-catholic-blue', 'hover:bg-blue-900');
+                elements.btnNext.classList.add('bg-green-600', 'hover:bg-green-700');
+            } else {
+                elements.btnNext.innerHTML = '<span>Lanjut</span><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ml-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>';
+                elements.btnNext.classList.remove('bg-green-600', 'hover:bg-green-700');
+                elements.btnNext.classList.add('bg-catholic-blue', 'hover:bg-blue-900');
+            }
+        }
+
+        function selectOptionUI(selectedBtn, badge) {
+            // Reset all
+            const allBtns = elements.optionsContainer.querySelectorAll('button');
+            allBtns.forEach(b => {
+                b.classList.remove('option-selected', 'border-catholic-blue');
+                b.classList.add('border-gray-200');
+                const bdg = b.querySelector('span:first-child');
+                bdg.classList.remove('bg-catholic-blue', 'text-white', 'border-catholic-blue');
+                bdg.classList.add('border-gray-300', 'text-gray-500');
+            });
+            
+            // Set selected
+            selectedBtn.classList.add('option-selected', 'border-catholic-blue');
+            selectedBtn.classList.remove('border-gray-200');
+            badge.classList.add('bg-catholic-blue', 'text-white', 'border-catholic-blue');
+            badge.classList.remove('border-gray-300', 'text-gray-500', 'group-hover:text-catholic-blue');
+        }
+
+        function handleOptionSelect(btn, key) {
+            state.userAnswers[state.currentQuestionIndex] = key;
+            selectOptionUI(btn, btn.querySelector('span:first-child'));
+        }
+
+        function handleNext() {
+            const currentAnswer = state.userAnswers[state.currentQuestionIndex];
+            
+            // Validation
+            if (!currentAnswer) {
+                modals.alert.classList.remove('hidden');
+                return;
+            }
+
+            // Check Answer & Play Sound
+            const isCorrect = currentAnswer === questions[state.currentQuestionIndex].answer;
+            if (isCorrect) {
+                playCorrectSound();
+            } else {
+                playWrongSound();
+            }
+
+            // Proceed
+            if (state.currentQuestionIndex < questions.length - 1) {
+                // Fade out current content slightly before changing
+                elements.optionsContainer.style.opacity = '0.5';
+                elements.questionText.style.opacity = '0.5';
+                
+                setTimeout(() => {
+                    state.currentQuestionIndex++;
+                    loadQuestion();
+                    elements.optionsContainer.style.opacity = '1';
+                    elements.questionText.style.opacity = '1';
+                }, 200);
+            } else {
+                modals.confirm.classList.remove('hidden');
+            }
+        }
+
+        // --- STREAMING_CHUNK:Result Calculation and Display ---
+        function calculateAndShowResult() {
+            modals.confirm.classList.add('hidden');
+            
+            let correctCount = 0;
+            state.userAnswers.forEach((ans, index) => {
+                if (ans === questions[index].answer) {
+                    correctCount++;
+                }
+            });
+
+            state.score = correctCount * 10;
+            const wrongCount = questions.length - correctCount;
+            const percentage = (correctCount / questions.length) * 100;
+
+            // Update Result UI
+            document.getElementById('finalScoreText').textContent = state.score;
+            
+            // Animate Circle (Circumference is ~439.8)
+            const circle = document.getElementById('scoreCircle');
+            const offset = 439.8 - (439.8 * percentage) / 100;
+            setTimeout(() => {
+                circle.style.strokeDashoffset = offset;
+            }, 500);
+
+            // Change circle color based on score
+            if(percentage >= 80) circle.style.stroke = '#16a34a'; // green
+            else if(percentage >= 60) circle.style.stroke = '#ca8a04'; // yellow
+            else circle.style.stroke = '#dc2626'; // red
+
+            document.getElementById('correctCountText').textContent = correctCount;
+            document.getElementById('wrongCountText').textContent = wrongCount;
+            document.getElementById('percentageText').textContent = `${percentage}%`;
+
+            // Set Message
+            const msgEl = document.getElementById('scoreMessage');
+            if (state.score >= 90) {
+                msgEl.textContent = "Luar biasa! Pemahamanmu tentang Mariologi Dasar sangat baik.";
+                msgEl.className = "text-lg font-bold mb-8 px-4 py-3 rounded-lg bg-green-50 border border-green-200 text-green-800 w-full max-w-md";
+                startConfetti();
+                playFinishSound();
+            } else if (state.score >= 80) {
+                msgEl.textContent = "Bagus! Kamu sudah memahami sebagian besar materi Mariologi Dasar.";
+                msgEl.className = "text-lg font-bold mb-8 px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 text-blue-800 w-full max-w-md";
+                playFinishSound();
+            } else if (state.score >= 70) {
+                msgEl.textContent = "Cukup baik! Pelajari kembali beberapa bagian materi agar pemahamanmu semakin kuat.";
+                msgEl.className = "text-lg font-bold mb-8 px-4 py-3 rounded-lg bg-yellow-50 border border-yellow-200 text-yellow-800 w-full max-w-md";
+            } else {
+                msgEl.textContent = "Jangan menyerah! Pelajari kembali materi dan pembahasan, kemudian ulangi kuis.";
+                msgEl.className = "text-lg font-bold mb-8 px-4 py-3 rounded-lg bg-red-50 border border-red-200 text-red-800 w-full max-w-md";
+            }
+
+            switchView('result');
+            buildReviewPage();
+        }
+
+        // --- STREAMING_CHUNK:Review Page Builder ---
+        function buildReviewPage() {
+            const container = document.getElementById('reviewContainer');
+            container.innerHTML = ''; // Clear previous
+
+            questions.forEach((q, index) => {
+                const userAnswer = state.userAnswers[index];
+                const isCorrect = userAnswer === q.answer;
+
+                const card = document.createElement('div');
+                card.className = `p-5 md:p-6 rounded-xl border-l-4 shadow-sm bg-white ${isCorrect ? 'border-green-500' : 'border-red-500'}`;
+                
+                // Header (Question)
+                const header = document.createElement('div');
+                header.className = 'mb-4';
+                header.innerHTML = `
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="text-sm font-bold text-gray-500 uppercase">Soal ${index + 1}</span>
+                        <span class="px-3 py-1 rounded-full text-xs font-bold ${isCorrect ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'} flex items-center">
+                            ${isCorrect 
+                                ? '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" /></svg> Jawaban Benar' 
+                                : '<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" /></svg> Jawaban Salah'}
+                        </span>
+                    </div>
+                    <h3 class="font-bold text-gray-800 text-lg">${q.question}</h3>
+                `;
+                card.appendChild(header);
+
+                // Options list
+                const optionsList = document.createElement('div');
+                optionsList.className = 'space-y-2 mb-4 text-sm md:text-base';
+                for (const [key, val] of Object.entries(q.options)) {
+                    const isSelected = key === userAnswer;
+                    const isCorrectKey = key === q.answer;
+                    
+                    let bgClass = 'bg-gray-50 text-gray-700 border-gray-100';
+                    let icon = '<span class="w-5 h-5 inline-block mr-2 text-center text-gray-400 font-bold">' + key + '</span>';
+                    
+                    if (isCorrectKey) {
+                        bgClass = 'bg-green-50 text-green-800 border-green-200 font-medium';
+                        icon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-green-600 inline" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" /></svg>';
+                    } else if (isSelected && !isCorrectKey) {
+                        bgClass = 'bg-red-50 text-red-800 border-red-200 line-through opacity-70';
+                        icon = '<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2 text-red-500 inline" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>';
+                    }
+
+                    optionsList.innerHTML += `
+                        <div class="p-2 md:p-3 rounded-lg border ${bgClass} flex items-start">
+                            <div class="flex-shrink-0 mt-0.5">${icon}</div>
+                            <div>${val}</div>
+                        </div>
+                    `;
+                }
+                card.appendChild(optionsList);
+
+                // Explanation
+                const explanation = document.createElement('div');
+                explanation.className = 'mt-4 p-4 bg-blue-50 border border-blue-100 rounded-lg text-sm md:text-base text-gray-800';
+                explanation.innerHTML = `<strong>Pembahasan:</strong><br>${q.explanation}`;
+                card.appendChild(explanation);
+
+                container.appendChild(card);
+            });
+        }
+
+        // --- STREAMING_CHUNK:Confetti Effect Logic ---
+        function startConfetti() {
+            const canvas = document.getElementById('confetti-canvas');
+            canvas.style.display = 'block';
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            let particles = [];
+            const colors = ['#1e3a8a', '#d4af37', '#60a5fa', '#ffffff'];
+
+            for (let i = 0; i < 100; i++) {
+                particles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height - canvas.height,
+                    w: Math.random() * 10 + 5,
+                    h: Math.random() * 10 + 5,
+                    color: colors[Math.floor(Math.random() * colors.length)],
+                    vy: Math.random() * 3 + 2,
+                    vx: Math.random() * 2 - 1,
+                    rot: Math.random() * 360,
+                    rotSpeed: Math.random() * 5 - 2.5
+                });
+            }
+
+            let animationId;
+            let counter = 0;
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, index) => {
+                    ctx.save();
+                    ctx.translate(p.x + p.w / 2, p.y + p.h / 2);
+                    ctx.rotate((p.rot * Math.PI) / 180);
+                    ctx.fillStyle = p.color;
+                    ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+                    ctx.restore();
+
+                    p.y += p.vy;
+                    p.x += p.vx;
+                    p.rot += p.rotSpeed;
+
+                    if (p.y > canvas.height) {
+                        particles[index].y = -10;
+                        particles[index].x = Math.random() * canvas.width;
+                    }
+                });
+
+                counter++;
+                if (counter < 200) { // Stop after ~3 seconds
+                    animationId = requestAnimationFrame(draw);
+                } else {
+                    canvas.style.display = 'none';
+                    cancelAnimationFrame(animationId);
+                }
+            }
+            draw();
+            
+            // Handle resize
+            window.addEventListener('resize', () => {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            });
+        }
+
+        // --- STREAMING_CHUNK:Event Listeners Setup ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Audio Toggle
+            document.getElementById('audioToggleBtn').addEventListener('click', () => {
+                state.isAudioEnabled = !state.isAudioEnabled;
+                document.getElementById('icon-sound-on').classList.toggle('hidden');
+                document.getElementById('icon-sound-off').classList.toggle('hidden');
+            });
+
+            // Start Button
+            document.getElementById('btnStartQuiz').addEventListener('click', startQuiz);
+
+            // Next Button
+            elements.btnNext.addEventListener('click', handleNext);
+
+            // Modal Buttons
+            document.getElementById('btnOkAlert').addEventListener('click', () => {
+                modals.alert.classList.add('hidden');
+            });
+            document.getElementById('btnCancelSubmit').addEventListener('click', () => {
+                modals.confirm.classList.add('hidden');
+            });
+            document.getElementById('btnConfirmSubmit').addEventListener('click', calculateAndShowResult);
+
+            // Result Actions
+            document.getElementById('btnRetryQuiz').addEventListener('click', () => {
+                document.getElementById('scoreCircle').style.strokeDashoffset = 439.8; // reset circle
+                startQuiz();
+            });
+            document.getElementById('btnViewReview').addEventListener('click', () => {
+                switchView('review');
+            });
+            document.getElementById('btnHomeFromResult').addEventListener('click', () => {
+                switchView('home');
+            });
+
+            // Review Actions
+            document.getElementById('btnCloseReview').addEventListener('click', () => {
+                switchView('result');
+            });
+            document.getElementById('btnRetryFromReview').addEventListener('click', () => {
+                startQuiz();
+            });
+            document.getElementById('btnHomeFromReview').addEventListener('click', () => {
+                switchView('home');
+            });
+        });
+    </script>
+</body>
+</html>
